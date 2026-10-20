@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Redação Multi-Bancas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f1f5f9; 
+            color: #2c3e50;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Bar de Navegação */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            max-width: 850px;
+            width: 100%;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: #f8fafc;
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }
+        .tab-btn:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+        .tab-btn.active {
+            background-color: #0f172a;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
+        /* Container Principal */
+        .container { 
+            background: #ffffff; 
+            padding: 20px 25px; 
+            border-radius: 14px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06); 
+            max-width: 850px; 
+            width: 100%; 
+        }
+
+        .grade-secao {
+            display: none;
+        }
+        .grade-secao.active {
+            display: block;
+        }
+
+        h2 { 
+            font-size: 1.3em;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+
+        /* Agrupamento compacto dos critérios */
+        .criterios-grupo {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .criterio-box { 
+            background: #fdfdfd;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #f1f5f9;
+        }
+        .titulo { 
+            font-weight: 700; 
+            color: #1e293b; 
+            margin-bottom: 8px; 
+            display: block; 
+            font-size: 0.88em; 
+            line-height: 1.2;
+        }
+
+        .baloes { 
+            display: flex; 
+            gap: 8px; 
+        }
+        .balao {
+            flex: 1; 
+            padding: 10px 6px; 
+            border: 2px solid #e2e8f0;
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center;
+            transition: all 0.15s ease-in-out; 
+            background: #ffffff; 
+            color: #334155;
+            font-size: 0.8em;
+            user-select: none;
+        }
+        .balao strong { 
+            display: block; 
+            font-size: 1.25em; 
+        }
+
+        .painel-notas {
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 35px; 
+            color: #ffffff; 
+            padding: 12px 20px; 
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .nota-item { 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nota-item small { 
+            text-transform: uppercase; 
+            font-size: 0.75em; 
+            opacity: 0.85; 
+            letter-spacing: 0.5px;
+        }
+        .nota-item b { 
+            font-size: 2em; 
+            line-height: 1;
+        }
+
+        /* --- VUNESP --- */
+        #vunesp h2 { color: #0f172a; border-bottom: 2px solid #10b981; }
+        #vunesp .balao strong { color: #10b981; }
+        #vunesp .balao:hover { border-color: #10b981; background: #f0fdf4; }
+        #vunesp .balao.selected { background: #10b981; border-color: #059669; color: #ffffff; }
+        #vunesp .balao.selected strong { color: #ffffff; }
+        #vunesp .painel-notas { background: #0f172a; }
+        #vunesp .decimal { color: #34d399; }
+
+        /* --- FUVEST --- */
+        #fuvest h2 { color: #1a3a5a; border-bottom: 2px solid #e67e22; }
+        #fuvest .balao strong { color: #e67e22; }
+        #fuvest .balao:hover { border-color: #e67e22; background: #fffcf9; }
+        #fuvest .balao.selected { background: #e67e22; border-color: #d35400; color: #ffffff; }
+        #fuvest .balao.selected strong { color: #ffffff; }
+        #fuvest .painel-notas { background: #1a3a5a; }
+        #fuvest .decimal { color: #ff9f43; }
+
+        /* --- ENEM --- */
+        #enem h2 { color: #065f46; border-bottom: 2px solid #16a34a; }
+        #enem .titulo span { color: #15803d; background: #dcfce7; padding: 1px 6px; border-radius: 4px; margin-right: 4px; }
+        #enem .balao strong { color: #15803d; }
+        #enem .balao:hover { border-color: #eab308; background: #fefce8; }
+        #enem .balao.selected { background: #15803d; border-color: #166534; color: #ffffff; }
+        #enem .balao.selected strong { color: #facc15; }
+        #enem .painel-notas { background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); border-bottom: 3px solid #eab308; }
+        #enem .nota-item b { color: #facc15; }
+
+        /* --- UNICAMP --- */
+        #unicamp h2 { color: #7c2d12; border-bottom: 2px solid #ea580c; }
+        #unicamp .balao strong { color: #ea580c; }
+        #unicamp .balao:hover { border-color: #ea580c; background: #fff7ed; }
+        #unicamp .balao.selected { background: #ea580c; border-color: #c2410c; color: #ffffff; }
+        #unicamp .balao.selected strong { color: #ffffff; }
+        #unicamp .painel-notas { background: #7c2d12; }
+        #unicamp .decimal { color: #fdba74; }
+    </style>
+</head>
+<body>
+
+<!-- BARRA SUPERIOR DE NAVEGAÇÃO -->
+<div class="top-bar">
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="trocarGrade(this, 'vunesp')">VUNESP</button>
+        <button class="tab-btn" onclick="trocarGrade(this, 'fuvest')">FUVEST</button>
+        <button class="tab-btn" onclick="trocarGrade(this, 'enem')">ENEM</button>
+        <button class="tab-btn" onclick="trocarGrade(this, 'unicamp')">UNICAMP</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ==================== MODELO VUNESP ==================== -->
+    <div id="vunesp" class="grade-secao active">
+        <h2>Avaliação de Redação - VUNESP</h2>
+
+        <div class="criterios-grupo">
+            <div class="criterio-box">
+                <span class="titulo">A. TEMA (0 a 3)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setVunesp(this, 'cA', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cA', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cA', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cA', 3)"><strong>3</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">B. GÊNERO / TIPO DE TEXTO E COERÊNCIA (0 a 4)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setVunesp(this, 'cB', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cB', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cB', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cB', 3)"><strong>3</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cB', 4)"><strong>4</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">C. MODALIDADE (0 a 4)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setVunesp(this, 'cC', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cC', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cC', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cC', 3)"><strong>3</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cC', 4)"><strong>4</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">D. COESÃO (0 a 3)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setVunesp(this, 'cD', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cD', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cD', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setVunesp(this, 'cD', 3)"><strong>3</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="painel-notas">
+            <div class="nota-item">
+                <small>Total:</small>
+                <b id="vunespTotal">0</b><span style="font-size: 1.1em; opacity: 0.6;">/14</span>
+            </div>
+            <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+            <div class="nota-item">
+                <small>Nota 0-10:</small>
+                <b id="vunespDecimal" class="decimal">0.0</b><span style="font-size: 1.1em; opacity: 0.6;">/10</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODELO FUVEST ==================== -->
+    <div id="fuvest" class="grade-secao">
+        <h2>Avaliação de Redação - Modelo FUVEST</h2>
+
+        <div class="criterios-grupo">
+            <div class="criterio-box">
+                <span class="titulo">1. Desenvolvimento do tema, uso da coletânea e autoria</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setFuvest(this, 'c1', 0)"><strong>0</strong>Anulação / Cópia</div>
+                    <div class="balao" onclick="setFuvest(this, 'c1', 5)"><strong>5</strong>Tangencial</div>
+                    <div class="balao" onclick="setFuvest(this, 'c1', 10)"><strong>10</strong>Razoável</div>
+                    <div class="balao" onclick="setFuvest(this, 'c1', 15)"><strong>15</strong>Adequado</div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">2. Gênero e tipo de texto</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setFuvest(this, 'c2', 0)"><strong>0</strong>Não atendimento</div>
+                    <div class="balao" onclick="setFuvest(this, 'c2', 3)"><strong>3</strong>Primário</div>
+                    <div class="balao" onclick="setFuvest(this, 'c2', 6)"><strong>6</strong>Razoável</div>
+                    <div class="balao" onclick="setFuvest(this, 'c2', 10)"><strong>10</strong>Adequado</div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">3. Recursos linguísticos (coesão e coerência)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setFuvest(this, 'c3', 5)"><strong>5</strong>Razoável</div>
+                    <div class="balao" onclick="setFuvest(this, 'c3', 10)"><strong>10</strong>Boa</div>
+                    <div class="balao" onclick="setFuvest(this, 'c3', 15)"><strong>15</strong>Ótima</div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">4. Convenções da escrita e vocabulário</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setFuvest(this, 'c4', 3)"><strong>3</strong>Rompe freq.</div>
+                    <div class="balao" onclick="setFuvest(this, 'c4', 6)"><strong>6</strong>Rompe poucas</div>
+                    <div class="balao" onclick="setFuvest(this, 'c4', 10)"><strong>10</strong>Rompe raramente</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="painel-notas">
+            <div class="nota-item">
+                <small>Total FUVEST:</small>
+                <b id="fuvestTotal">0</b><span style="font-size: 1.1em; opacity: 0.6;">/50</span>
+            </div>
+            <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+            <div class="nota-item">
+                <small>Nota 0-10:</small>
+                <b id="fuvestDecimal" class="decimal">0.0</b><span style="font-size: 1.1em; opacity: 0.6;">/10</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODELO ENEM ==================== -->
+    <div id="enem" class="grade-secao">
+        <h2>Avaliação de Redação - Modelo ENEM</h2>
+
+        <div class="criterios-grupo">
+            <div class="criterio-box">
+                <span class="titulo"><span>C1</span> Domínio da norma culta da língua escrita</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setEnem(this, 'c1', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c1', 40)"><strong>40</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c1', 80)"><strong>80</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c1', 120)"><strong>120</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c1', 160)"><strong>160</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c1', 200)"><strong>200</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo"><span>C2</span> Compreensão do tema e aplicação das áreas do conhecimento</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setEnem(this, 'c2', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c2', 40)"><strong>40</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c2', 80)"><strong>80</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c2', 120)"><strong>120</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c2', 160)"><strong>160</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c2', 200)"><strong>200</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo"><span>C3</span> Seleção, relação, organização e interpretação de informações</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setEnem(this, 'c3', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c3', 40)"><strong>40</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c3', 80)"><strong>80</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c3', 120)"><strong>120</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c3', 160)"><strong>160</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c3', 200)"><strong>200</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo"><span>C4</span> Demonstração de conhecimento dos mecanismos linguísticos (Coesão)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setEnem(this, 'c4', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c4', 40)"><strong>40</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c4', 80)"><strong>80</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c4', 120)"><strong>120</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c4', 160)"><strong>160</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c4', 200)"><strong>200</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo"><span>C5</span> Elaboração de proposta de intervenção</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setEnem(this, 'c5', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c5', 40)"><strong>40</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c5', 80)"><strong>80</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c5', 120)"><strong>120</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c5', 160)"><strong>160</strong></div>
+                    <div class="balao" onclick="setEnem(this, 'c5', 200)"><strong>200</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="painel-notas">
+            <div class="nota-item">
+                <small>Nota Total ENEM:</small>
+                <b id="enemTotal">0</b><span style="font-size: 1.1em; opacity: 0.7;">/1000</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODELO UNICAMP ==================== -->
+    <div id="unicamp" class="grade-secao">
+        <h2>Avaliação de Redação - Modelo UNICAMP</h2>
+
+        <div class="criterios-grupo">
+            <div class="criterio-box">
+                <span class="titulo">1. Proposta Temática (0 a 2)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setUnicamp(this, 'c1', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c1', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c1', 2)"><strong>2</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">2. Gênero (0 a 3)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setUnicamp(this, 'c2', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c2', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c2', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c2', 3)"><strong>3</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">3. Leitura de Textos (0 a 3)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setUnicamp(this, 'c3', 0)"><strong>0</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c3', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c3', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c3', 3)"><strong>3</strong></div>
+                </div>
+            </div>
+
+            <div class="criterio-box">
+                <span class="titulo">4. Convenções de Escrita (1 a 4)</span>
+                <div class="baloes">
+                    <div class="balao" onclick="setUnicamp(this, 'c4', 1)"><strong>1</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c4', 2)"><strong>2</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c4', 3)"><strong>3</strong></div>
+                    <div class="balao" onclick="setUnicamp(this, 'c4', 4)"><strong>4</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="painel-notas">
+            <div class="nota-item">
+                <small>Total UNICAMP:</small>
+                <b id="unicampTotal">0</b><span style="font-size: 1.1em; opacity: 0.6;">/12</span>
+            </div>
+            <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+            <div class="nota-item">
+                <small>Nota 0-10:</small>
+                <b id="unicampDecimal" class="decimal">0.0</b><span style="font-size: 1.1em; opacity: 0.6;">/10</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function trocarGrade(btn, idGrade) {
+        document.querySelectorAll('.grade-secao').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        document.getElementById(idGrade).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    let notasVunesp = { cA: 0, cB: 0, cC: 0, cD: 0 };
+    function setVunesp(el, cat, val) {
+        let siblings = el.parentElement.querySelectorAll('.balao');
+        siblings.forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        notasVunesp[cat] = val;
+        const total = notasVunesp.cA + notasVunesp.cB + notasVunesp.cC + notasVunesp.cD;
+        const decimal = (total / 14) * 10;
+
+        document.getElementById('vunespTotal').innerText = total;
+        document.getElementById('vunespDecimal').innerText = decimal.toFixed(1);
+    }
+
+    let notasFuvest = { c1: 0, c2: 0, c3: 0, c4: 0 };
+    function setFuvest(el, cat, val) {
+        let siblings = el.parentElement.querySelectorAll('.balao');
+        siblings.forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        notasFuvest[cat] = val;
+        const total = notasFuvest.c1 + notasFuvest.c2 + notasFuvest.c3 + notasFuvest.c4;
+        const decimal = total / 5;
+
+        document.getElementById('fuvestTotal').innerText = total;
+        document.getElementById('fuvestDecimal').innerText = decimal.toFixed(1);
+    }
+
+    let notasEnem = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+    function setEnem(el, cat, val) {
+        let siblings = el.parentElement.querySelectorAll('.balao');
+        siblings.forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        notasEnem[cat] = val;
+        const total = notasEnem.c1 + notasEnem.c2 + notasEnem.c3 + notasEnem.c4 + notasEnem.c5;
+
+        document.getElementById('enemTotal').innerText = total;
+    }
+
+    let notasUnicamp = { c1: 0, c2: 0, c3: 0, c4: 0 };
+    function setUnicamp(el, cat, val) {
+        let siblings = el.parentElement.querySelectorAll('.balao');
+        siblings.forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        notasUnicamp[cat] = val;
+        const total = notasUnicamp.c1 + notasUnicamp.c2 + notasUnicamp.c3 + notasUnicamp.c4;
+        const decimal = (total / 12) * 10;
+
+        document.getElementById('unicampTotal').innerText = total;
+        document.getElementById('unicampDecimal').innerText = decimal.toFixed(1);
+    }
+</script>
+
+</body>
+</html>
